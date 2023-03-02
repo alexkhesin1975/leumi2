@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leumidock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: leumidock
+  template:
+    metadata:
+      labels:
+        app: leumidock
+    spec:
+      containers:
+        - name: leumidock
+          image: dkr.ecr.AWS_REGION.amazonaws.com/ECR_repo_name/leumidock:latest
+          ports:
+          - containerPort: 443
+          env:
+            - name: PORT
+              value: "443"
+          imagePullPolicy: Always
+      imagePullSecrets:
+      - name: ecr-secret

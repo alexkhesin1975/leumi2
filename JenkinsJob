@@ -1,0 +1,34 @@
+pipeline {
+    agent none
+  stages {
+    stage('Build Docker Image') {
+        agent { label 'dockernode1'}
+        steps{                
+            echo 'Build Image Started'                
+            sh 'sudo docker build -t leumidock'           
+            echo 'Build Image Completed'                
+        }
+    stage('Push Docker Image to Nexus Registry'){
+        agent { label 'dockernode2'}
+        steps {
+            sh 'docker push NexusDockerRegistryUrl/leumidock'
+            sh 'docker rmi $(docker images --filter=reference="NexusDockerRegistryUrl/leumidock*" -q)'
+        }
+      }
+    stage('Pushing to ECR') {
+        agent { label 'dockernode1'}
+        steps{
+            sh 'docker tag leumidock ECR_repo_name/leumidock:latest
+            sh 'docker push dkr.ecr.AWS_REGION.amazonaws.com/ECR_repo_name/leumidock:latest'
+        }
+    }
+    stage('Start pod on k8s'){
+        agent { label 'dockernode1'}
+        steps{
+            sh 'kubectl apply -f deploy-pod.yml'
+        }
+    }
+   }
+  }     
+}
+
